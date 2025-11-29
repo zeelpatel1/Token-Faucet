@@ -3,6 +3,7 @@ import { Program } from "@coral-xyz/anchor";
 import {
   TOKEN_PROGRAM_ID,
   createMint,
+  getAccount,
   getOrCreateAssociatedTokenAccount,
   mintTo,
 } from "@solana/spl-token";
@@ -112,4 +113,25 @@ describe("token-faucet", () => {
 
     console.log("Faucet initialized successfully!");
   });
+
+  it("Fund Faucet", async () => {
+  const fundAmount = new BN(500);
+
+  await program.methods
+    .fundFaucet(fundAmount)
+    .accounts({
+      user: user.publicKey,
+      userTokenAta: userTokenAccount,
+      vaultFaucet: vaultPDA,
+      faucet: faucetPDA,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .signers([user])
+    .rpc();
+
+  const vaultAccountInfo = await getAccount(provider.connection, vaultPDA);
+  console.log("Vault balance after funding:", vaultAccountInfo.amount.toString());
+});
+
+
 });
