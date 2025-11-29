@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Token};
+use anchor_spl::token::{self, Token, TokenAccount, Mint, Transfer};
+
 
 declare_id!("DyTqqVKtYEzJAdJhT2aDcVuTD7JFkRWjBDfeXTCZWPUe");
 
@@ -23,6 +24,43 @@ pub mod token_faucet {
 
         Ok(())
     }
+
+    pub fn fund_faucet(ctx:Context<FundFaucet>,amount:u64) -> Result<()> {
+
+        let faucet=&mut ctx.accounts.faucet;
+
+        let cpi_account=Transfer{
+            from:ctx.accounts.user_token_ata.to_account_info(),
+            to:ctx.accounts.vault_faucet.to_account_info(),
+            authority:ctx.accounts.user.to_account_info()
+        };
+
+        let cpi_program=CpiContext::new(
+            ctx.accounts.token_program.to_account_info(), cpi_account);
+
+        token::transfer(cpi_program, amount)?;
+
+        Ok(())
+    }
+
+}
+
+#[derive(Accounts)]
+pub struct FundFaucet<'info> {
+
+    #[account(mut)]
+    pub user:Signer<'info>,
+
+    #[account(mut)]
+    pub user_token_ata:Account<'info,TokenAccount>,
+
+    #[account(mut)]
+    pub vault_faucet:Account<'info,TokenAccount>,
+
+    pub faucet: Account<'info, Faucet>,
+
+    pub token_program: Program<'info, Token>,
+
 }
 
 #[derive(Accounts)]
