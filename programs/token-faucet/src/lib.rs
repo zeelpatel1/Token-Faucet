@@ -43,6 +43,52 @@ pub mod token_faucet {
         Ok(())
     }
 
+    pub fn drip_faucet(ctx:Context<DripFaucet>) -> Result<()> {
+
+        let faucet=&ctx.accounts.faucet;
+
+        let seeds: &[&[u8]] = &[
+            b"faucet_vault",
+            faucet.mint.as_ref(),
+            &[faucet.bump],
+        ];
+
+        let signer_seeds: &[&[&[u8]]] = &[seeds];
+
+        let cpi_account=Transfer{
+            from:ctx.accounts.vault_faucet.to_account_info(),
+            to:ctx.accounts.request_user_token_ata.to_account_info(),
+            authority:ctx.accounts.faucet.to_account_info()
+        };
+
+        let cpi_ctx=CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_account,
+            signer_seeds,
+        );
+
+        token::transfer(cpi_ctx, faucet.drip_amount)?;
+
+        Ok(())
+    }
+
+}
+
+#[derive(Accounts)]
+pub struct DripFaucet<'info> {
+    #[account(mut)]
+    pub request_user:Signer<'info>,
+
+    #[account(mut)]
+    pub request_user_token_ata:Account<'info,TokenAccount>,
+
+    #[account(mut)]
+    pub vault_faucet:Account<'info,TokenAccount>,
+
+    pub faucet:Account<'info,Faucet>,
+
+    pub token_program:Program<'info,Token>,
+
 }
 
 #[derive(Accounts)]
