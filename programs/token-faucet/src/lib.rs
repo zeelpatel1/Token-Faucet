@@ -21,6 +21,7 @@ pub mod token_faucet {
         faucet.drip_amount = drip_amount;
         faucet.cooldown_seconds = cooldown_seconds;
         faucet.bump = ctx.bumps.faucet;
+        faucet.vault_bump = ctx.bumps.vault_faucet;
 
         Ok(())
     }
@@ -48,7 +49,7 @@ pub mod token_faucet {
         let faucet=&ctx.accounts.faucet;
 
         let seeds: &[&[u8]] = &[
-            b"faucet_vault",
+            b"faucet_metadata",
             faucet.mint.as_ref(),
             &[faucet.bump],
         ];
@@ -76,6 +77,7 @@ pub mod token_faucet {
 
 #[derive(Accounts)]
 pub struct DripFaucet<'info> {
+
     #[account(mut)]
     pub request_user:Signer<'info>,
 
@@ -124,7 +126,7 @@ pub struct InitializeFaucet<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + 32 + 32 + 8 + 8 + 1,
+        space = 8 + 32 + 32 + 8 + 8 + 1 + 1,
         seeds = [b"faucet_metadata", user_token_mint.key().as_ref()],
         bump
     )]
@@ -153,4 +155,5 @@ pub struct Faucet {
     pub drip_amount: u64,
     pub cooldown_seconds: u64,
     pub bump: u8,
+    pub vault_bump: u8,
 }

@@ -38,7 +38,7 @@ describe("token-faucet", () => {
     console.log("Airdropping SOL to test wallet...");
     const sig = await provider.connection.requestAirdrop(
       user.publicKey,
-      2 * LAMPORTS_PER_SOL
+      10 * LAMPORTS_PER_SOL
     );
     await provider.connection.confirmTransaction(sig);
 
@@ -132,6 +132,32 @@ describe("token-faucet", () => {
   const vaultAccountInfo = await getAccount(provider.connection, vaultPDA);
   console.log("Vault balance after funding:", vaultAccountInfo.amount.toString());
 });
+
+  it("Drip from Faucet",async() => {
+    
+    const user2 = Keypair.generate();
+    const sig = await provider.connection.requestAirdrop(user2.publicKey, 10 * LAMPORTS_PER_SOL);
+    await provider.connection.confirmTransaction(sig);
+
+    const user2Ata = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      user2,
+      mint,
+      user2.publicKey
+    );
+
+     await program.methods.dripFaucet().accounts({
+      requestUser: user2.publicKey,       
+      requestUserTokenAta: user2Ata.address,
+      vaultFaucet: vaultPDA,
+      faucet: faucetPDA,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).signers([user2]).rpc();
+
+    const user2AccountInfo = await getAccount(provider.connection, user2Ata.address);
+    console.log("User2 token account balance after drip:", user2AccountInfo.amount.toString());
+
+  })
 
 
 });
